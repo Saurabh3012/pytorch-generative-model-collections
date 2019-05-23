@@ -5,6 +5,8 @@ import torch.optim as optim
 import sys
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
+import torch.distributions as tdist
+
 from dataloader import dataloader
 
 class generator(nn.Module):
@@ -102,7 +104,11 @@ class WGAN(object):
         self.z_dim = 62
         self.c = 0.01                   # clipping value
         self.n_critic = 5               # the number of iterations of the critic per generator iteration
-
+        
+        #for DP
+        self.sigma = args.sigma
+        self.m = tdist.Normal(0, self.sigma)
+        
         #for infogan
         self.SUPERVISED = True        # if it is true, label info is directly used for code
         self.len_discrete_code = 10         # categorical distribution (i.e. label)
@@ -238,6 +244,11 @@ class WGAN(object):
 
 
                 D_loss.backward(retain_graph=True)
+                
+                for p in self.D.parameters():
+                    samp = self.m.sample(sample_shape=p.grad.shape).cuda()
+                    p.grad += samp
+                
                 self.D_optimizer.step()
 
                 # clipping D

@@ -1,14 +1,8 @@
 import argparse, os, torch
-from GAN import GAN
-from CGAN import CGAN
-from LSGAN import LSGAN
-from DRAGAN import DRAGAN
-from ACGAN import ACGAN
+
+from infoGAN import infoGAN
 from WGAN import WGAN
 from WGAN_GP import WGAN_GP
-from infoGAN import infoGAN
-from EBGAN import EBGAN
-from BEGAN import BEGAN
 
 """parsing and configuration"""
 def parse_args():
@@ -31,6 +25,8 @@ def parse_args():
     parser.add_argument('--lrG', type=float, default=0.0002)
 
     parser.add_argument('--c', type=float, default=0.01)
+    parser.add_argument('--sigma', type=float, default=1.00)
+
 
     parser.add_argument('--lrD', type=float, default=0.0002)
     parser.add_argument('--beta1', type=float, default=0.5)
