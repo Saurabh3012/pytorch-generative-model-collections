@@ -82,6 +82,12 @@ class discriminator(nn.Module):
 class infoGAN(object):
     def __init__(self, args, SUPERVISED=True):
         # parameters
+
+        #for DP
+        self.c = args.c
+
+        print(self.c)
+
         self.epoch = args.epoch
         self.batch_size = args.batch_size
         self.save_dir = args.save_dir
