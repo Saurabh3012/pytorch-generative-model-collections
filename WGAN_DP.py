@@ -86,7 +86,7 @@ class discriminator(nn.Module):
 
         return a, b, c
 
-class WGAN(object):
+class WGAN_DP(object):
     def __init__(self, args):
         # parameters
         
@@ -101,8 +101,8 @@ class WGAN(object):
         self.gpu_mode = args.gpu_mode
         self.model_name = args.gan_type
         self.input_size = args.input_size
-        self.z_dim = 62
-        self.c = 0.01                   # clipping value
+        self.z_dim = 100
+        self.c = args.c                   # clipping value
         self.n_critic = 5               # the number of iterations of the critic per generator iteration
         
         #for DP
@@ -150,7 +150,7 @@ class WGAN(object):
         #     self.sample_z_ = self.sample_z_.cuda()
 
         # for infogan fixed noise & condition
-        self.sample_z_ = torch.zeros((self.sample_num, self.z_dim))
+        self.sample_z_ = torch.rand((self.sample_num, self.z_dim))
         for i in range(self.len_discrete_code):
             self.sample_z_[i * self.len_discrete_code] = torch.rand(1, self.z_dim)
             for j in range(1, self.len_discrete_code):
@@ -245,15 +245,18 @@ class WGAN(object):
 
                 D_loss.backward(retain_graph=True)
                 
+                
+                # clipping D
+                for p in self.D.parameters():
+                    p.data.clamp_(-self.c, self.c)
+                
                 for p in self.D.parameters():
                     samp = self.m.sample(sample_shape=p.grad.shape).cuda()
                     p.grad += samp
                 
                 self.D_optimizer.step()
 
-                # clipping D
-                for p in self.D.parameters():
-                    p.data.clamp_(-self.c, self.c)
+                
 
                 if ((iter+1) % self.n_critic) == 0:
                     # update G network
@@ -346,6 +349,78 @@ class WGAN(object):
 
         self.G.load_state_dict(torch.load(os.path.join(save_dir, self.model_name + '_G.pkl')))
         self.D.load_state_dict(torch.load(os.path.join(save_dir, self.model_name + '_D.pkl')))
+        
+    
+    def give_me_samples(self):
+        self.load()
+        self.G.eval()
+        
+        save_dir = os.path.join(self.save_dir, self.dataset)
+
+        samples_0 = []
+        samples_1 = []
+        samples_2 = []
+        samples_3 = []
+        samples_4 = []
+        samples_5 = []
+        samples_6 = []
+        samples_7 = []
+        samples_8 = []
+        samples_9 = []
+        
+        
+        for samp in range(200):
+        
+            image_frame_dim = int(np.floor(np.sqrt(self.sample_num)))
+    
+            """ style by class """
+            samples = self.G(self.sample_z_, self.sample_c_, self.sample_y_)
+            if self.gpu_mode:
+                samples = samples.cpu().data.numpy().transpose(0, 2, 3, 1)
+            else:
+                samples = samples.data.numpy().transpose(0, 2, 3, 1)
+
+            samples = samples.reshape(100, 1, 28, 28)
+            
+            for i in range(0, 99, 10):
+                for j in range(10):
+                    if i+j == i:
+                        samples_0.append(samples[i+j])
+                    if i+j+1 == i +1:
+                        samples_1.append(samples[i+j + 1])
+                    if i+j+2 == i +2:
+                        samples_2.append(samples[i+j+2])
+                    if i+j+3 == i +3:
+                        samples_3.append(samples[i+j+3])
+                    if i+j+4 == i +4:
+                        samples_4.append(samples[i+j+4])
+                    if i+j+5 == i +5:
+                        samples_5.append(samples[i+j+5])
+                    if i+j+6 == i +6:
+                        samples_6.append(samples[i+j+6])
+                    if i+j+7 == i +7:
+                        samples_7.append(samples[i+j+7])
+                    if i+j+8 == i +8:
+                        samples_8.append(samples[i+j+8])
+                    if i+j+9 == i +9:
+                        samples_9.append(samples[i+j+9])
+
+            sampler = {
+                "samples_0": samples_0,
+                "samples_1": samples_1,
+                "samples_2": samples_2,
+                "samples_3": samples_3,
+                "samples_4": samples_4,
+                "samples_5": samples_5,
+                "samples_6": samples_6,
+                "samples_7": samples_7,
+                "samples_8": samples_8,
+                "samples_9": samples_9
+            }
+
+            torch.save(sampler, os.path.join(save_dir, self.dataset + 'samples.pkl'))
+
+        
 
     def loss_plot(self, hist, path='Train_hist.png', model_name=''):
         x = range(len(hist['D_loss']))

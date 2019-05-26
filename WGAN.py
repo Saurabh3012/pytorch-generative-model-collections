@@ -99,8 +99,8 @@ class WGAN(object):
         self.gpu_mode = args.gpu_mode
         self.model_name = args.gan_type
         self.input_size = args.input_size
-        self.z_dim = 62
-        self.c = 0.01                   # clipping value
+        self.z_dim = 100
+        self.c = args.c                   # clipping value
         self.n_critic = 5               # the number of iterations of the critic per generator iteration
 
         #for infogan
@@ -317,6 +317,76 @@ class WGAN(object):
         samples = (samples + 1) / 2
         utils.save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
                           self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_cont_epoch%03d' % epoch + '.png')
+        
+        
+    def give_me_samples(self):
+        self.load()
+        self.G.eval()
+        
+        save_dir = os.path.join(self.save_dir, self.dataset)
+
+        samples_0 = []
+        samples_1 = []
+        samples_2 = []
+        samples_3 = []
+        samples_4 = []
+        samples_5 = []
+        samples_6 = []
+        samples_7 = []
+        samples_8 = []
+        samples_9 = []
+        
+        
+        for samp in range(200):
+        
+            image_frame_dim = int(np.floor(np.sqrt(self.sample_num)))
+    
+            """ style by class """
+            samples = self.G(self.sample_z_, self.sample_c_, self.sample_y_)
+            if self.gpu_mode:
+                samples = samples.cpu().data.numpy().transpose(0, 2, 3, 1)
+            else:
+                samples = samples.data.numpy().transpose(0, 2, 3, 1)
+
+            samples = samples.reshape(100, 1, 28, 28)
+            
+            for i in range(0, 99, 10):
+                for j in range(10):
+                    if i+j == i:
+                        samples_0.append(samples[i+j])
+                    if i+j+1 == i +1:
+                        samples_1.append(samples[i+j + 1])
+                    if i+j+2 == i +2:
+                        samples_2.append(samples[i+j+2])
+                    if i+j+3 == i +3:
+                        samples_3.append(samples[i+j+3])
+                    if i+j+4 == i +4:
+                        samples_4.append(samples[i+j+4])
+                    if i+j+5 == i +5:
+                        samples_5.append(samples[i+j+5])
+                    if i+j+6 == i +6:
+                        samples_6.append(samples[i+j+6])
+                    if i+j+7 == i +7:
+                        samples_7.append(samples[i+j+7])
+                    if i+j+8 == i +8:
+                        samples_8.append(samples[i+j+8])
+                    if i+j+9 == i +9:
+                        samples_9.append(samples[i+j+9])
+
+            sampler = {
+                "samples_0": samples_0,
+                "samples_1": samples_1,
+                "samples_2": samples_2,
+                "samples_3": samples_3,
+                "samples_4": samples_4,
+                "samples_5": samples_5,
+                "samples_6": samples_6,
+                "samples_7": samples_7,
+                "samples_8": samples_8,
+                "samples_9": samples_9
+            }
+
+            torch.save(sampler, os.path.join(save_dir, self.dataset + 'samples.pkl'))
         
     def save(self):
         save_dir = os.path.join(self.save_dir, self.dataset, self.model_name)

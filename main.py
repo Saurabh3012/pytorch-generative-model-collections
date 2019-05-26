@@ -3,6 +3,7 @@ import argparse, os, torch
 from infoGAN import infoGAN
 from WGAN import WGAN
 from WGAN_GP import WGAN_GP
+from WGAN_DP import WGAN_DP
 
 """parsing and configuration"""
 def parse_args():
@@ -10,7 +11,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument('--gan_type', type=str, default='GAN',
-                        choices=['GAN', 'CGAN', 'infoGAN', 'ACGAN', 'EBGAN', 'BEGAN', 'WGAN', 'WGAN_GP', 'DRAGAN', 'LSGAN'],
+                        choices=['GAN', 'CGAN', 'infoGAN', 'ACGAN', 'EBGAN', 'BEGAN', 'WGAN', 'WGAN_GP', 'DRAGAN', 'LSGAN', 'WGAN_DP'],
                         help='The type of GAN')
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'fashion-mnist', 'cifar10', 'cifar100', 'svhn', 'stl10', 'lsun-bed'],
                         help='The name of dataset')
@@ -87,6 +88,8 @@ def main():
         gan = EBGAN(args)
     elif args.gan_type == 'WGAN':
         gan = WGAN(args)
+    elif args.gan_type == 'WGAN_DP':
+        gan = WGAN_DP(args)
     elif args.gan_type == 'WGAN_GP':
         gan = WGAN_GP(args)
     elif args.gan_type == 'DRAGAN':
@@ -105,6 +108,10 @@ def main():
     # visualize learned generator
     gan.visualize_results(args.epoch)
     print(" [*] Testing finished!")
+
+    gan.give_me_samples()
+    print(" [*] Samples Generated!")
+
 
 if __name__ == '__main__':
     main()
